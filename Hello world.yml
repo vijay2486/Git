@@ -1,0 +1,32 @@
+---
+- hosts: webservers
+  become: true
+  vars:
+    tomcat_installed_location: /home/ansible
+  tasks:
+#  - name: Installing JDK 8
+#    yum:
+#      name=java-1.8.0-openjdk.x86_64
+#      state=latest
+  - name: Downloading tomcat
+    get_url: url=http://www-us.apache.org/dist/tomcat/tomcat-9/v9.0.16/bin/apache-tomcat-9.0.16.tar.gz dest=/home/ansible
+  - name: Extracting the downloaded tomcat file
+    command: tar -xvf "{{ tomcat_installed_location }}/apache-tomcat-9.0.16.tar.gz"
+  - name: check dir existance
+    stat:
+      path: "{{ tomcat_installed_location }}/tomcat"
+    register: inst_dest_dir
+  - when: inst_dest_dir.stat.isdir and not inst_dest_dir.stat.exists
+    command: mv -f "{{ tomcat_installed_location }}/apache-tomcat-9.0.16" "{{ tomcat_installed_location }}/tomcat"
+    name: rename
+  - name: Changing the group & ownership of tomcat
+    file:
+      path="{{ tomcat_installed_location }}/tomcat" owner=ansible group=ansible mode=775 state=directory recurse=yes
+  - name: Starting tomcat
+    command: nohup "{{ tomcat_installed_location }}/tomcat/apache-tomcat-9.0.16/bin/startup.sh"
+    become: true
+    become_user: ansible
+  - name: installing Open-ssl package
+    yum:
+      name=Openssl,mod_ssl state=latest
+  
