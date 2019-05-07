@@ -1,0 +1,26 @@
+---
+- hosts: webservers
+  become: true
+  tasks:
+  - name: Installing JDK
+    yum:
+      name: java-1.8.0-openjdk.x86_64
+      state: present
+  - name: Downloading tomcat
+    get_url:
+      url: http://mirrors.estointernet.in/apache/tomcat/tomcat-9/v9.0.17/bin/apache-tomcat-9.0.17.tar.gz
+      dest: /home/ansible/v2
+  - name: Extracting apache-tomcat-9.0.14.tar.gz & renaming the zipped apache file.
+    shell: |
+      tar -xf /home/ansible/v2/apache-tomcat-9.0.17.tar.gz -C /opt/
+      mv /opt/apache-tomcat-9.0.17 /opt/tomcat9
+  - name: Changing the ownership to ansible with permissions 777
+    file:
+      path: "/opt/tomcat9"
+      owner: root
+      group: root
+      mode: 755
+      state: directory
+      recurse: yes
+  - name: starting tomcat services
+    command: nohup "/opt/tomcat9/bin/startup.sh"
